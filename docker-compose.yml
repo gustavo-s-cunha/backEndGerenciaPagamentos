@@ -1,0 +1,41 @@
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: gen_payment_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  api:
+    build: .
+    container_name: gen_payment_api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+      - gateways
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER}
+      DB_PASS: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      GATEWAY_1_URL: http://gateways:3001
+      GATEWAY_2_URL: http://gateways:3002
+
+  gateways:
+    image: matheusprotzen/gateways-mock
+    container_name: gen_payment_gateways
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    environment:
+      REMOVE_AUTH: "true"
+
+volumes:
+  mysql_data:
